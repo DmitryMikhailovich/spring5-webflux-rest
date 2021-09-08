@@ -77,4 +77,19 @@ class CategoryControllerTest {
                 .isCreated();
 
     }
+
+    @Test
+    void update() {
+        when(categoryRepository.save(any(Category.class))).thenReturn(Mono.just(new Category()));
+
+        Category category = new Category();
+        category.setDescription("New desc");
+
+        Mono<Category> categoryMono = Mono.just(category);
+        webTestClient.put().uri(CategoryController.ROOT_URL + "/ID")
+                .body(categoryMono, Category.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+    }
 }
