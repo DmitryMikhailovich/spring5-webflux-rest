@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -61,5 +62,19 @@ class VendorControllerTest {
         webTestClient.get().uri(VendorController.ROOT_URL + "/" + vendor.getId())
                 .exchange()
                 .expectBody(Vendor.class);
+    }
+
+    @Test
+    void create() {
+        when(vendorRepository.saveAll(any(Publisher.class))).thenReturn(Flux.just(new Vendor()));
+        Vendor vendor = new Vendor();
+        vendor.setName("Vendor");
+
+        Mono<Vendor> vendorMono = Mono.just(vendor);
+        webTestClient.post().uri(VendorController.ROOT_URL)
+                .body(vendorMono, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isCreated();
     }
 }
