@@ -77,4 +77,21 @@ class VendorControllerTest {
                 .expectStatus()
                 .isCreated();
     }
+
+    @Test
+    void update() {
+        when(vendorRepository.save(any(Vendor.class))).thenReturn(Mono.just(new Vendor()));
+
+        Vendor vendor = new Vendor();
+        vendor.setName("ACME");
+
+        Mono<Vendor> vendorMono = Mono.just(vendor);
+
+        webTestClient.put().uri(VendorController.ROOT_URL + "/ID")
+                .body(vendorMono, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+    }
 }
