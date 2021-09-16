@@ -14,7 +14,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class VendorControllerTest {
@@ -93,5 +93,42 @@ class VendorControllerTest {
                 .expectStatus()
                 .isOk();
 
+    }
+
+    @Test
+    void patchWithChanges() {
+        Vendor existVendor = new Vendor();
+        existVendor.setName("Old name");
+        when(vendorRepository.findById(any(String.class))).thenReturn(Mono.just(existVendor));
+        when(vendorRepository.save(any(Vendor.class))).thenReturn(Mono.just(new Vendor()));
+
+        Vendor vendor = new Vendor();
+        vendor.setName("New name");
+
+        Mono<Vendor> vendorMono = Mono.just(vendor);
+        webTestClient.patch().uri(VendorController.ROOT_URL + "/ID")
+                .body(vendorMono, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(vendorRepository).findById(any(String.class));
+        verify(vendorRepository).save(any(Vendor.class));
+    }
+
+    @Test
+    void patchWithoutChanges() {
+        Vendor existVendor = new Vendor();
+        existVendor.setName("Old desc");
+        when(vendorRepository.findById(any(String.class))).thenReturn(Mono.just(existVendor));
+
+        Mono<Vendor> vendorMono = Mono.just(existVendor);
+        webTestClient.patch().uri(VendorController.ROOT_URL + "/ID")
+                .body(vendorMono, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+        verify(vendorRepository).findById(any(String.class));
+        verify(vendorRepository, never()).save(any(Vendor.class));
     }
 }

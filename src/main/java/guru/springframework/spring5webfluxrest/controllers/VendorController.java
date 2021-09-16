@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
 @RestController
 public class VendorController {
 
@@ -38,5 +40,16 @@ public class VendorController {
     Mono<Vendor> update(@PathVariable String id, @RequestBody Vendor vendor) {
         vendor.setId(id);
         return vendorRepository.save(vendor);
+    }
+
+    @PatchMapping(ROOT_URL + "/{id}")
+    Mono<Vendor> patch(@PathVariable String id, @RequestBody Vendor patchedVendor) {
+        Vendor vendor = vendorRepository.findById(id).block();
+        assert vendor != null;
+        if(!Objects.equals(patchedVendor.getName(), vendor.getName())) {
+            vendor.setName(patchedVendor.getName());
+            return vendorRepository.save(vendor);
+        }
+        return Mono.just(vendor);
     }
 }
