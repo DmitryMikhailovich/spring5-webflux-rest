@@ -14,7 +14,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -91,5 +91,42 @@ class CategoryControllerTest {
                 .exchange()
                 .expectStatus()
                 .isOk();
+    }
+
+    @Test
+    void patchWithChanges() {
+        Category existCategory = new Category();
+        existCategory.setDescription("Old desc");
+        when(categoryRepository.findById(any(String.class))).thenReturn(Mono.just(existCategory));
+        when(categoryRepository.save(any(Category.class))).thenReturn(Mono.just(new Category()));
+
+        Category category = new Category();
+        category.setDescription("New desc");
+
+        Mono<Category> categoryMono = Mono.just(category);
+        webTestClient.patch().uri(CategoryController.ROOT_URL + "/ID")
+                .body(categoryMono, Category.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(categoryRepository).findById(any(String.class));
+        verify(categoryRepository).save(any(Category.class));
+    }
+
+    @Test
+    void patchWithoutChanges() {
+        Category existCategory = new Category();
+        existCategory.setDescription("Old desc");
+        when(categoryRepository.findById(any(String.class))).thenReturn(Mono.just(existCategory));
+
+        Mono<Category> categoryMono = Mono.just(existCategory);
+        webTestClient.patch().uri(CategoryController.ROOT_URL + "/ID")
+                .body(categoryMono, Category.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+        verify(categoryRepository).findById(any(String.class));
+        verify(categoryRepository, never()).save(any(Category.class));
     }
 }
